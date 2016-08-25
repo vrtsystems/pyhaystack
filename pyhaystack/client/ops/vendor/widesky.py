@@ -185,7 +185,7 @@ class CreateEntityOperation(EntityRetrieveOperation):
                 e_id = e_id.name
             if '.' in e_id:
                 e_id = e_id.split('.')[-1]
-            e['id'] = hszinc.Ref(e_id)
+            e['id'] = e_id
             return e
         entities = list(map(_preprocess_entity, self._new_entities))
         self._session.create(entities, callback=self._on_read)
