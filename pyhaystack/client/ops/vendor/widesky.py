@@ -183,8 +183,6 @@ class CreateEntityOperation(EntityRetrieveOperation):
             e_id = e.pop('id')
             if isinstance(e_id, hszinc.Ref):
                 e_id = e_id.name
-            if '.' in e_id:
-                e_id = e_id.split('.')[-1]
             e['id'] = e_id
             return e
         entities = list(map(_preprocess_entity, self._new_entities))
