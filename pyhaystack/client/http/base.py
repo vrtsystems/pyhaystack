@@ -259,9 +259,9 @@ class HTTPResponse(object):
     """
     def __init__(self, status_code, headers, body, cookies=None):
         self.status_code = status_code
-        self.headers = headers
+        self.headers = CaseInsensitiveDict(headers or {})
         self.body = body
-        self.cookies = cookies
+        self.cookies = CaseInsensitiveDict(cookies or {})
         self._content_type = None
         self._content_type_args = None
         self._text = None
@@ -303,11 +303,7 @@ class HTTPResponse(object):
         return self._text
 
     def _parse_content_type(self):
-        # Handle both cases
-        content_type = self.headers.get(b'Content-Type', \
-                self.headers.get(b'content-type'))
-        assert content_type is not None, 'Missing content type in %s' \
-                % list(self.headers.keys())
+        content_type = self.headers['content-type']
 
         # Is content encoding shoehorned in there?
         if ';' in content_type:
@@ -319,3 +315,37 @@ class HTTPResponse(object):
             content_type_args = {}
         self._content_type = content_type
         self._content_type_args = content_type_args
+
+
+class CaseInsensitiveDict(dict):
+    """
+    A dict object that maps keys in a case-insensitive manner.
+    """
+    @classmethod
+    def _key_to_str(cls, key):
+        # Handle bytes
+        if isinstance(key, bytes):
+            key = key.decode('utf-8')
+        return str(key).lower()
+
+    def __init__(self, *args, **kwargs):
+        super(CaseInsensitiveDict, self).__init__(*args, **kwargs)
+        self._key_map = dict([(self._key_to_str(k), k) for k in self.keys()])
+
+    def __getitem__(self, key, *args, **kwargs):
+        try:
+            key = self._key_map[self._key_to_str(key)]
+        except KeyError:
+            pass
+        return super(CaseInsensitiveDict, self).__getitem__(
+                key, *args, **kwargs)
+
+    def __setitem__(self, key, *args, **kwargs):
+        self._key_map[self._key_to_str(k)] = key
+        return super(CaseInsensitiveDict, self).__setitem__(
+                key, *args, **kwargs)
+
+    def __delitem__(self, key, *args, **kwargs):
+        self._key_map.pop(str(key).lower(), None)
+        return super(CaseInsensitiveDict, self).__delitem__(
+                key, *args, **kwargs)
