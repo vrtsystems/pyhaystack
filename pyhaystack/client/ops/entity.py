@@ -11,6 +11,7 @@ import fysom
 
 from ...util import state
 from ...util.asyncexc import AsynchronousException
+from ...exception import HaystackError
 
 
 class EntityRetrieveOperation(state.HaystackOperation):
@@ -38,7 +39,14 @@ class EntityRetrieveOperation(state.HaystackOperation):
         """
         try:
             # See if the read succeeded.
-            grid = operation.result
+            try:
+                grid = operation.result
+            except HaystackError as e:
+                # Is this a "not found" error?
+                if str(e).startswith('HNotFoundError'):
+                    raise NameError('No matching entity found')
+                raise
+
             self._log.debug('Received grid: %s', grid)
 
             # Iterate over each row:
@@ -93,8 +101,8 @@ class GetEntityOperation(EntityRetrieveOperation):
     """
     Operation for retrieving entity instances by ID.  This operation peforms
     the following steps::
-    
-        If refresh_all is False:                  
+
+        If refresh_all is False:
         # State: init
             For each entity_id in entity_ids:
                 If entity_id exists in cache:
@@ -102,7 +110,7 @@ class GetEntityOperation(EntityRetrieveOperation):
                     Add entity_id to list got_ids.
             For each entity_id in got_ids:
                 Discard entity_id from entity_ids.
-        If entity_ids is not empty:               
+        If entity_ids is not empty:
         # State: read
             Perform a low-level read of the IDs.
             For each row returned in grid:
@@ -111,11 +119,11 @@ class GetEntityOperation(EntityRetrieveOperation):
                 Else:
                     Update existing Entity instance with new row data.
             Add the new entity instances to cache and store.
-        Return the stored entities.                      
+        Return the stored entities.
         # State: done
 
     """
-    
+
 
     def __init__(self, session, entity_ids, refresh_all, single):
         """
@@ -199,9 +207,9 @@ class FindEntityOperation(EntityRetrieveOperation):
                 Else:
                     Update existing Entity instance with new row data.
                 Add the new entity instances to cache and store.
-            Return the stored entities. 
-            # State: done              
-            
+            Return the stored entities.
+            # State: done
+
     """
 
     def __init__(self, session, filter_expr, limit, single):

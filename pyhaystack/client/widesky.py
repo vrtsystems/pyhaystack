@@ -9,6 +9,8 @@ from .session import HaystackSession
 from .ops.vendor.widesky import WideskyAuthenticateOperation, \
         CreateEntityOperation, WideSkyHasFeaturesOperation
 from .mixins.vendor.widesky import crud, multihis
+from ..util.asyncexc import AsynchronousException
+from .http.exceptions import HTTPStatusError
 
 def _decode_str(s, enc='utf-8'):
     """
@@ -66,6 +68,29 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
         return (self._auth_result.get('expires_in') or 0.0) > (1000.0 * time())
 
     # Private methods/properties
+
+    def _on_read(self, ids, filter_expr, limit, callback, **kwargs):
+        return super(WideskyHaystackSession, self)._on_read(
+                ids, filter_expr, limit, callback,
+                accept_status=(200, 404))
+
+    def _on_http_grid_response(self, response):
+        # If there's a '401' error, then we've lost the token.
+        if isinstance(response, AsynchronousException):
+            try:
+                response.reraise()
+            except HTTPStatusError as e:
+                status_code = e.status
+            except:
+                # Anything else, no-op … let the state machine handle it!
+                return
+        else:
+            status_code = response.status_code
+
+        if (status_code == 401) and (self._auth_result is not None):
+            self._log.warning('Authentication lost due to HTTP error 401.')
+            self._auth_result = None
+            self._client.headers = {}
 
     def _on_authenticate_done(self, operation, **kwargs):
         """

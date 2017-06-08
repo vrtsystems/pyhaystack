@@ -23,7 +23,8 @@ class BaseGridOperation(state.HaystackOperation):
 
     def __init__(self, session, uri, args=None,
             expect_format=hszinc.MODE_ZINC, multi_grid=False,
-            raw_response=False, retries=2, cache=False, cache_key=None):
+            raw_response=False, retries=2, cache=False, cache_key=None,
+            accept_status=None):
         """
         Initialise a request for the grid with the given URI and arguments.
 
@@ -43,6 +44,8 @@ class BaseGridOperation(state.HaystackOperation):
         :param cache: Whether or not to cache this result.  If True, the
                       result is cached by the session object.
         :param cache_key: Name of the key to use when the object is cached.
+        :param accept_status: What status codes to accept, in addition to the
+                            usual ones?
         """
 
         super(BaseGridOperation, self).__init__()
@@ -61,6 +64,7 @@ class BaseGridOperation(state.HaystackOperation):
         self._expect_format = expect_format
         self._raw_response = raw_response
         self._headers = {}
+        self._accept_status = accept_status
 
         self._cache = cache
         if cache and (cache_key is None):
@@ -146,18 +150,25 @@ class BaseGridOperation(state.HaystackOperation):
             self._state_machine.cache_miss()    # Nope
             return
 
+        # Initialise data
+        op = None
+        grid = None
+        expiry = 0.0
+
         with self._session._grid_lk:
             try:
                 (op, expiry, grid) = self._session._grid_cache[self._cache_key]
             except KeyError:
-                # Put ourselves there
+                # Not in cache
+                pass
+
+            if (grid is None) or (expiry <= time()):
+                # We have a cache miss.
                 op = self
-                expiry = 0.0
                 grid = None
                 self._session._grid_cache[self._cache_key] = (op, expiry, grid)
 
-        if (grid is not None) and (expiry > time()):
-            # We have a cache hit!
+        if grid is not None:
             self._state_machine.cache_hit(result=grid)
             return
 
@@ -181,6 +192,12 @@ class BaseGridOperation(state.HaystackOperation):
         Process the response given back by the HTTP server.
         """
         try:
+            # Does the session want to invoke any relevant hooks?
+            # This allows a session to detect problems in the session and
+            # abort the operation.
+            if hasattr(self._session, '_on_http_grid_response'):
+                self._session._on_http_grid_response(response)
+
             # Process the HTTP error, if any.
             if isinstance(response, AsynchronousException):
                 response.reraise()
@@ -285,7 +302,8 @@ class GetGridOperation(BaseGridOperation):
 
         try:
             self._session._get(self._uri, params=self._args,
-                    headers=self._headers, callback=self._on_response)
+                    headers=self._headers, callback=self._on_response,
+                    accept_status=self._accept_status)
         except: # Catch all exceptions to pass to caller.
             self._log.debug('Get fails', exc_info=1)
             self._state_machine.exception(result=AsynchronousException())
@@ -328,7 +346,8 @@ class PostGridOperation(BaseGridOperation):
         try:
             self._session._post(self._uri, body=self._body,
                     body_type=self._content_type, params=self._args,
-                    headers=self._headers, callback=self._on_response)
+                    headers=self._headers, callback=self._on_response,
+                    accept_status=self._accept_status)
         except: # Catch all exceptions to pass to caller.
             self._log.debug('Post fails', exc_info=1)
             self._state_machine.exception(result=AsynchronousException())
