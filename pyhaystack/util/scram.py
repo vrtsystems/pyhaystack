@@ -50,5 +50,22 @@ def regex_after_equal(s):
     tmp_str = re.search( "\=(.*)$" ,s, flags=0)
     return tmp_str.group(1)
 
+def pack_be_uint(ui):
+    """
+    Return the packed-binary representation of an arbitrary unsigned integer.
+    """
+    if ui < 0:
+        raise ValueError('ui must not be negative')
+
+    # Extract the least significant byte, stick it at the head
+    # of our array, then shift the remainder left 8 bits.
+    ui_bytes = []
+    while ui != 0:
+        ui_bytes.insert(0, ui & 0xff)
+        ui >>= 8
+
+    # Now convert these to a string of arbitrary bytes
+    return bytes(bytearray(ui_bytes))
+
 def _xor(s1, s2):
     return hex(int(s1, 16) ^ int(s2, 16))[2:]
