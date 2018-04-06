@@ -296,8 +296,8 @@ def get_jession(arg_header):
             return jsession
 
 def _createClientProof(salted_password, auth_msg, algorithm):
-    client_key          = hmac.new( unhexlify( salted_password ), "Client Key".encode('UTF-8'), algorithm).hexdigest()
-    stored_key          = scram._hash_sha256( unhexlify(client_key), algorithm )
-    client_signature    = hmac.new( unhexlify( stored_key ) , auth_msg.encode() , algorithm ).hexdigest()
-    client_proof        = scram._xor (client_key, client_signature)
-    return b2a_base64(unhexlify(client_proof)).decode('utf-8')
+    client_key          = hmac.new( unhexlify( salted_password ), "Client Key".encode('UTF-8'), algorithm).digest()
+    stored_key          = scram._hash_sha256( client_key, algorithm )
+    client_signature    = hmac.new( stored_key, auth_msg.encode() , algorithm ).digest()
+    client_proof        = scram.xor_bytearrays(client_key, client_signature)
+    return b2a_base64(client_proof).decode('utf-8')
