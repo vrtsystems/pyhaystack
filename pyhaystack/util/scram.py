@@ -67,5 +67,15 @@ def pack_be_uint(ui):
     # Now convert these to a string of arbitrary bytes
     return bytes(bytearray(ui_bytes))
 
+def unpack_be_uint(bs):
+    """
+    Return the unsigned integer represented by a string of arbitrary bytes.
+    """
+    ui = 0
+    for b in bytearray(bs):
+        ui <<= 8
+        ui |= b
+    return ui
+
 def _xor(s1, s2):
     return hex(int(s1, 16) ^ int(s2, 16))[2:]
