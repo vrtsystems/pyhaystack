@@ -77,5 +77,8 @@ def unpack_be_uint(bs):
         ui |= b
     return ui
 
-def _xor(s1, s2):
-    return hex(int(s1, 16) ^ int(s2, 16))[2:]
+def xor_bytearrays(b1, b2):
+    """
+    Return the XOR of two arbitrary length byte arrays.
+    """
+    return pack_be_uint(unpack_be_uint(b1) ^ unpack_be_uint(b2))
