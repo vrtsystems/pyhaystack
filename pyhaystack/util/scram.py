@@ -27,7 +27,7 @@ def get_nonce_16():
 def _hash_sha256(client_key, algorithm):
     hashFunc = algorithm()
     hashFunc.update(client_key)
-    return hashFunc.hexdigest()
+    return hashFunc.digest()
 
 def salted_password(salt, iterations, algorithm_name, password):
     dk = pbkdf2_hmac(algorithm_name, password.encode(),
