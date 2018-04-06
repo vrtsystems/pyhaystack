@@ -200,11 +200,11 @@ class SkysparkScramAuthenticateOperation(state.HaystackOperation):
     def _do_server_token(self, event):
         client_final_no_proof = "c=%s,r=%s" % ( scram.standard_b64encode(b'n,,').decode() , self._server_nonce )
         auth_msg              = "%s,%s,%s" % ( self._client_second_msg, self._server_first_msg, client_final_no_proof )
-        client_key            = hmac.new(unhexlify(scram.salted_password(self._server_salt, self._server_iterations, self._algorithm_name, self._session._password)), "Client Key".encode('UTF-8'), self._algorithm).hexdigest()
-        stored_key            = scram._hash_sha256(unhexlify(client_key), self._algorithm)
-        client_signature      = hmac.new( unhexlify(stored_key), auth_msg.encode('utf-8'), self._algorithm).hexdigest()
-        client_proof          = scram._xor(client_key, client_signature)
-        client_proof_encode   = b2a_base64(unhexlify(client_proof)).decode()
+        client_key            = hmac.new(unhexlify(scram.salted_password(self._server_salt, self._server_iterations, self._algorithm_name, self._session._password)), "Client Key".encode('UTF-8'), self._algorithm).digest()
+        stored_key            = scram._hash_sha256(client_key, self._algorithm)
+        client_signature      = hmac.new(stored_key, auth_msg.encode('utf-8'), self._algorithm).digest()
+        client_proof          = scram.xor_bytearrays(client_key, client_signature)
+        client_proof_encode   = b2a_base64(client_proof).decode()
         client_final          = client_final_no_proof + ",p=" + client_proof_encode
         client_final_base64   = scram.base64_no_padding(client_final)
         final_msg             = "scram handshaketoken=%s,data=%s" % (self._handshake_token , client_final_base64)
