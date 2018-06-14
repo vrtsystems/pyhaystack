@@ -180,12 +180,13 @@ class CreateEntityOperation(EntityRetrieveOperation):
             if not isinstance(e, dict):
                 raise TypeError('%r is not a dict' % e)
             e = e.copy()
-            e_id = e.pop('id')
-            if isinstance(e_id, hszinc.Ref):
-                e_id = e_id.name
-            if '.' in e_id:
-                e_id = e_id.split('.')[-1]
-            e['id'] = hszinc.Ref(e_id)
+            if 'id' in e:
+                e_id = e.pop('id')
+                if isinstance(e_id, hszinc.Ref):
+                    e_id = e_id.name
+                if '.' in e_id:
+                    e_id = e_id.split('.')[-1]
+                e['id'] = hszinc.Ref(e_id)
             return e
         entities = list(map(_preprocess_entity, self._new_entities))
         self._session.create(entities, callback=self._on_read)

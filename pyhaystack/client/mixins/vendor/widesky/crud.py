@@ -126,8 +126,11 @@ class CRUDOpsMixin(object):
         all_columns = set()
         list(map(all_columns.update, [e.keys() for e in entities]))
         # We'll put 'id' first sort the others.
-        all_columns.discard('id')
-        all_columns = ['id'] + sorted(all_columns)
+        if 'id' in all_columns:
+            all_columns.discard('id')
+            all_columns = ['id'] + sorted(all_columns)
+        else:
+            all_columns = sorted(all_columns)
 
         # Construct the grid
         grid = hszinc.Grid()
@@ -139,7 +142,8 @@ class CRUDOpsMixin(object):
             entity = entity.copy()
 
             # Ensure 'id' is a ref
-            entity['id'] = self._obj_to_ref(entity['id'])
+            if 'id' in entity:
+                entity['id'] = self._obj_to_ref(entity['id'])
 
             # Ensure all other columns are present
             for column in all_columns:
