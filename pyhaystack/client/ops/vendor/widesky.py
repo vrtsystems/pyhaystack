@@ -221,4 +221,9 @@ class WideSkyHasFeaturesOperation(HasFeaturesOperation):
                 except ValueError:
                     # Unrecognised version string
                     return res
+            elif feature == HaystackSession.FEATURE_ID_UUID:
+                try:
+                    res[feature] = semver.match(ver, '>=0.8.0')
+                except ValueError:
+                    return res
         return res

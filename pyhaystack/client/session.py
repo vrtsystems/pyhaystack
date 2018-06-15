@@ -384,6 +384,7 @@ class HaystackSession(object):
     # Extension feature support.
     FEATURE_HISREAD_MULTI = 'hisRead/multi'   # Multi-point hisRead
     FEATURE_HISWRITE_MULTI = 'hisWrite/multi'   # Multi-point hisWrite
+    FEATURE_ID_UUID = 'id_uuid'
     def has_features(self, features, cache=True, callback=None):
         """
         Determine if a given feature is supported.  This is a helper function
