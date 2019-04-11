@@ -17,6 +17,8 @@ How to use it
   his
   quantity
   synchronous
+  niagara_plugin
+  skyspark_plugin
 
 Modules documentation
 =====================
