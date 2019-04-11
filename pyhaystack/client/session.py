@@ -214,7 +214,21 @@ class HaystackSession(object):
         If refresh is True, then all points on the watch will be updated, not
         just those that have changed since the last poll.
         """
+<<<<<<< HEAD
         return self._on_watch_poll(watch=watch, refresh=refresh, callback=callback)
+=======
+        grid = hszinc.Grid()
+        grid.column['empty'] = {}
+
+        if not isinstance(watch, string_types):
+            watch = watch.id
+        grid.metadata['watchId'] = watch
+
+        if refresh:
+            grid.metadata['refresh'] = hszinc.MARKER
+
+        return self._post_grid('watchPoll', grid, callback)
+>>>>>>> upstream/master
 
     def point_write(self, point, level=None, val=None, who=None,
             duration=None, callback=None):
@@ -380,6 +394,23 @@ class HaystackSession(object):
             op.done_sig.connect(callback)
         op.go()
         return op
+    
+    @property
+    def site(self):
+        """
+        This helper will return the first site found on the server.
+        This case is typical : having one site per server.
+        """
+        sites = self.find_entity('site').result
+        return sites[list(sites.keys())[0]]
+
+    @property
+    def sites(self):
+        """
+        This helper will return all sites found on the server.
+        """
+        sites = self.find_entity('site').result
+        return sites
 
     # Extension feature support.
     FEATURE_HISREAD_MULTI = 'hisRead/multi'   # Multi-point hisRead

@@ -13,11 +13,13 @@ Which clients are implemented ?
 -------------------------------
 Actually, connection can be established with :
 
+* Niagara4_ by Tridium
 * NiagaraAX_ by Tridium
 * Widesky_ by VRT_
-* Skyspark_ by SkyFoundry
+* Skyspark_ by SkyFoundry (version 2 and 3+)
 
-Connection to Niagara AX requires the nHaystack_ module by J2 Innovations
+Connection to Niagara AX or Niagara 4 requires the nHaystack_ module by J2 Innovations to be installed
+and properly configured on your Jace. Refer to documentation of nHaystack for details.
 
 How do I install pyhaystack ?
 -----------------------------
@@ -28,6 +30,42 @@ How do I install pyhaystack ?
 Or you can also git clone the develop branch and use ::
 
     python setup.py install
+
+.. note::
+    Some users reported problems when installing pyhaystack using the Python version 
+    provided by their OS (Mac OS users). We recommend to try the virtual environment
+    approach when you are unsure about the python version our modules dependencies.
+    
+Using virtual env
+------------------
+You can find more information on how to use virtualenv_ but here is a short way of making it work.
+
+::
+
+    sudo pip install virtualenv
+    mkdir your project folder
+    cd project
+    virtualenv venv
+    source venv/bin/activate
+
+.. note:: 
+    Once you are in your virtual env DO NOT use sudo to pip install.
+    (in fact, this is the part that made me think of permission issue as I read somewhere that we should never sudo pip install anything)
+
+So now you are in your virtual env (it's in parenthesis in the console) and you
+
+::
+                                   
+    pip install requests
+    pip install hszinc
+    pip install pyhaystack
+
+(note that this time you won't see any weird message when trying to install pandas and you need xcode to perform the install....)
+You are now able to ::
+
+    import hszinc
+    hszinc.MODE_ZINC
+    from pyhaystack.client.skyspark import SkysparkHaystackSession    
 
 What is project-haystack ?
 --------------------------
@@ -43,18 +81,20 @@ As stated in the web site
 
   -- Project-Haystack
 
-New implementation
+Actual implementation
 --------------------------
-We've been reworking everything from the early version.
-Now, pyhaystack is more robust and will be ready for asynchronous development.
+Pyhaystack is robust and will be ready for asynchronous development.
 
-This new implementation has been mostly supported by VRT_ and Servisys_. We are hoping 
+We have chosen a state machine approach with observer pattern. See the docs for
+more informations.
+
+This implementation has been mostly supported by VRT_ and Servisys_. We are hoping 
 that more people will join us in our effort to build a well working open-source software
 that will open the door of building data analysis to Python users.
 
 Dependency
 --------------
-Pyhaystack highly depend on hszinc_ which is a special parser for zinc encoded data. 
+Pyhaystack highly depends on hszinc_ which is a special parser for zinc encoded data. 
 Zinc was created for project-haystack_ as a CSV replacement. 
 
 For analysis, we also suggest using Pint_ to deal with units. It will bring a lot of possibilities
@@ -81,6 +121,8 @@ to pyhaystack (ex. unit conversion)
 
 .. _NiagaraAX : https://www.tridium.com/en/products-services/niagaraax
 
+.. _Niagara4 : https://www.tridium.com/en/products-services/niagara4
+
 .. _VRT : http://www.vrt.com.au/
 
 .. _Servisys : http://www.servisys.com
@@ -96,3 +138,5 @@ to pyhaystack (ex. unit conversion)
 .. _Pint : http://pint.readthedocs.io
 
 .. _hszinc : https://github.com/vrtsystems/hszinc
+
+.. _virtualenv : https://virtualenv.pypa.io/en/stable/
