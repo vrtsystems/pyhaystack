@@ -380,10 +380,28 @@ class HaystackSession(object):
             op.done_sig.connect(callback)
         op.go()
         return op
+    
+    @property
+    def site(self):
+        """
+        This helper will return the first site found on the server.
+        This case is typical : having one site per server.
+        """
+        sites = self.find_entity('site').result
+        return sites[list(sites.keys())[0]]
+
+    @property
+    def sites(self):
+        """
+        This helper will return all sites found on the server.
+        """
+        sites = self.find_entity('site').result
+        return sites
 
     # Extension feature support.
     FEATURE_HISREAD_MULTI = 'hisRead/multi'   # Multi-point hisRead
     FEATURE_HISWRITE_MULTI = 'hisWrite/multi'   # Multi-point hisWrite
+    FEATURE_ID_UUID = 'id_uuid'
     def has_features(self, features, cache=True, callback=None):
         """
         Determine if a given feature is supported.  This is a helper function
