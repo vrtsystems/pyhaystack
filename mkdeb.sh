@@ -22,6 +22,8 @@ cd "${MY_DIR}"
 	--command-package stdeb.command sdist_dsc \
 	--with-python2=${BUILD_PY2} --with-python3=${BUILD_PY3} \
 	${DEBIAN_VERSION:+--debian-version=}${DEBIAN_VERSION} \
+	--depends python-hszinc --depends3 python3-hszinc \
+	--build-depends python-hszinc --build-depends python3-hszinc \
 	bdist_deb
 
 # Clean up source tree
