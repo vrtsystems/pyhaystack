@@ -38,7 +38,8 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
 
     def __init__(self, uri, username, password,
             client_id, client_secret,
-            api_dir='api', auth_dir='oauth2/token', **kwargs):
+            api_dir='api', auth_dir='oauth2/token',
+            impersonate=None, **kwargs):
         """
         Initialise a VRT Widesky Project Haystack session handler.
 
@@ -47,6 +48,7 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
         :param password: Authentication password.
         :param client_id: Authentication client ID.
         :param client_secret: Authentication client secret.
+        :param impersonate: A widesky user id.
         """
         super(WideskyHaystackSession, self).__init__(
                 uri, api_dir, **kwargs)
@@ -56,6 +58,7 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
         self._client_id = client_id
         self._client_secret = client_secret
         self._auth_result = None
+        self._impersonate = impersonate
 
     @property
     def is_logged_in(self):
@@ -109,6 +112,10 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
                             'us-ascii'),
                     )).encode('us-ascii')
             }
+
+            if self._impersonate:
+                self._client.headers['X-IMPERSONATE'] = self._impersonate;
+
         except:
             self._auth_result = None
             self._client.headers = {}
