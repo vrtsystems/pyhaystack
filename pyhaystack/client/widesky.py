@@ -49,6 +49,7 @@ class WideskyHaystackSession(
         client_secret,
         api_dir="api",
         auth_dir="oauth2/token",
+        impersonate=None,
         **kwargs
     ):
         """
@@ -59,6 +60,7 @@ class WideskyHaystackSession(
         :param password: Authentication password.
         :param client_id: Authentication client ID.
         :param client_secret: Authentication client secret.
+        :param impersonate: A widesky user ID to impersonate (or None)
         """
         super(WideskyHaystackSession, self).__init__(uri, api_dir, **kwargs)
         self._auth_dir = auth_dir
@@ -67,6 +69,7 @@ class WideskyHaystackSession(
         self._client_id = client_id
         self._client_secret = client_secret
         self._auth_result = None
+        self._impersonate = impersonate
 
     @property
     def is_logged_in(self):
@@ -121,6 +124,9 @@ class WideskyHaystackSession(
                     )
                 ).encode("us-ascii")
             }
+
+            if self._impersonate:
+                self._client.headers['X-IMPERSONATE'] = self._impersonate
         except:
             self._auth_result = None
             self._client.headers = {}

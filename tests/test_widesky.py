@@ -34,6 +34,39 @@ from pyhaystack.client import widesky
 BASE_URI = "https://myserver/api/"
 
 
+class DummyWsOperation(object):
+    result = {
+        'token_type': 'Bearer',
+        'access_token': 'abc123',
+        'expires_in': (time.time() + 1.0) * 1000.0
+    }
+
+
+class TestImpersonateParam(object):
+    """
+    Test is_logged_in property
+    """
+    def test_impersonate_is_set_in_client_header(self):
+        """
+        is_logged_in == False if _auth_result is None.
+        """
+        user_id = '12345ab'
+        server = dummy_http.DummyHttpServer()
+        session = widesky.WideskyHaystackSession(
+            uri=BASE_URI,
+            username='testuser',
+            password='testpassword',
+            client_id='testclient',
+            client_secret='testclientsecret',
+            impersonate=user_id,
+            http_client=dummy_http.DummyHttpClient,
+            http_args={'server': server, 'debug': True})
+
+        session._on_authenticate_done(DummyWsOperation())
+
+        assert session._client.headers['X-IMPERSONATE'] is user_id
+
+
 class TestIsLoggedIn(object):
     """
     Test is_logged_in property
