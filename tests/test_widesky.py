@@ -60,8 +60,31 @@ class TestImpersonateParam(object):
             http_args={'server': server, 'debug': True})
 
         session._on_authenticate_done(DummyWsOperation())
-
         assert session._client.headers['X-IMPERSONATE'] is userId
+
+
+class TestUpdatePassword(object):
+    """
+    Test the updatePassword op
+    """
+
+    def test_update_pwd_endpoint_is_called(self):
+        server = dummy_http.DummyHttpServer()
+        session = widesky.WideskyHaystackSession(
+            uri=BASE_URI,
+            username='testuser',
+            password='testpassword',
+            client_id='testclient',
+            client_secret='testclientsecret',
+            http_client=dummy_http.DummyHttpClient,
+            http_args={'server': server, 'debug': True})
+
+        session._on_authenticate_done(DummyWsOperation())
+        session.updatePassword('hello123X')
+
+        assert server.requests() is 1
+        assert server._requests[0].body == \
+        '{"newPassword": "hello123X"}'
 
 
 class TestIsLoggedIn(object):
@@ -148,7 +171,7 @@ class TestIsLoggedIn(object):
 
 
 class TestOnHTTPGridResponse(object):
-    """
+    """`
     Test _on_http_grid_response
     """
 
