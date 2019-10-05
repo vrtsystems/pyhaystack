@@ -8,7 +8,7 @@ from time import time
 from .session import HaystackSession
 from .ops.vendor.widesky import WideskyAuthenticateOperation, \
         CreateEntityOperation, WideSkyHasFeaturesOperation
-from .mixins.vendor.widesky import crud, multihis
+from .mixins.vendor.widesky import crud, multihis, password
 from ..util.asyncexc import AsynchronousException
 from .http.exceptions import HTTPStatusError
 
@@ -25,6 +25,7 @@ def _decode_str(s, enc='utf-8'):
 
 class WideskyHaystackSession(crud.CRUDOpsMixin,
         multihis.MultiHisOpsMixin,
+        password.PasswordOpsMixin,
         HaystackSession):
     """
     The WideskyHaystackSession class implements some base support for
