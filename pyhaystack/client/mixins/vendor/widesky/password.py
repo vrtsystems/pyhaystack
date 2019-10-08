@@ -6,6 +6,7 @@ VRT Widesky low-level Password mix-in.
 import json
 import hszinc
 from six import string_types
+from .....util.asyncexc import AsynchronousException
 
 class PasswordOpsMixin(object):
     """
@@ -16,19 +17,25 @@ class PasswordOpsMixin(object):
         """
         Change the current logged in user's password.
 
-        If the update is successful then the HTTPResponse
-        object is return.
-        Otherwise an instance of the AsynchronousException.
+        If the update is successful then True is returned.
+        Otherwise False.
 
         :param newPassword: Password value.
         :param callback: The function to call after this operation
         is complete.
         """
+        def onResp(response):
+            updated = True
+            if isinstance(response, AsynchronousException):
+                updated = False
+
+            return callback(updated)
+
         headers = self._client.headers.copy()
         headers["Content-Type"] = "application/json"
 
-        result = self._post(uri='user/updatePassword',
-                        callback=callback,
+        resp = self._post(uri='user/updatePassword',
+                        callback=onResp,
                         body=json.dumps({ "newPassword": newPassword }),
                         headers=headers,
                         api=False)
