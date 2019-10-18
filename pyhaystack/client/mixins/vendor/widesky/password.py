@@ -18,23 +18,22 @@ class PasswordOpsMixin(object):
         Change the current logged in user's password.
 
         If the update is successful then True is returned.
-        Otherwise False.
+        Otherwise the AsynchronousException is reraised.
 
         :param newPassword: Password value.
         :param callback: The function to call after this operation
         is complete.
         """
         def onResp(response):
-            updated = True
             if isinstance(response, AsynchronousException):
-                updated = False
+                response.reraise()
 
-            return callback(updated)
+            return callback(True)
 
         headers = self._client.headers.copy()
         headers["Content-Type"] = "application/json"
 
-        resp = self._post(uri='user/updatePassword',
+        return self._post(uri='user/updatePassword',
                         callback=onResp,
                         body=json.dumps({ "newPassword": newPassword }),
                         headers=headers,
