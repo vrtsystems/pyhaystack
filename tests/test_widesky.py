@@ -24,6 +24,9 @@ import datetime
 import pytz
 import time
 
+# JSON encoding/decoding
+import json
+
 # Logging setup so we can see what's going on
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -38,6 +41,46 @@ class DummyWsOperation(object):
         'access_token': 'abc123',
         'expires_in': (time.time() + 1.0) * 1000.0
     }
+
+
+@pytest.fixture
+def server_session():
+    """
+    Initialise a HaystackSession and dummy HTTP server instance.
+    """
+    server = dummy_http.DummyHttpServer()
+    session = widesky.WideskyHaystackSession(
+            uri=BASE_URI,
+            username='testuser',
+            password='testpassword',
+            client_id='testclient',
+            client_secret='testclientsecret',
+            http_client=dummy_http.DummyHttpClient,
+            http_args={'server': server, 'debug': True},
+            grid_format=hszinc.MODE_ZINC)
+
+    # Force an authentication.
+    op = session.authenticate()
+
+    # Pop the request off the stack.  We'll assume it's fine for now.
+    rq = server.next_request()
+    assert server.requests() == 0, 'More requests waiting'
+    rq.respond(status=200,
+            headers={
+                b'Content-Type': 'application/json'
+            },
+            content='''{
+                "token_type": "Bearer",
+                "access_token": "DummyAccessToken",
+                "refresh_token": "DummyRefreshToken",
+                "expires_in": %f
+            }''' % ((time.time() + 86400) * 1000.0))
+    assert op.state == 'done'
+    logging.debug('Result = %s', op.result)
+    assert server.requests() == 0
+    assert session.is_logged_in
+    return (server, session)
+
 
 class TestImpersonateParam(object):
     """
@@ -63,28 +106,37 @@ class TestImpersonateParam(object):
         assert session._client.headers['X-IMPERSONATE'] is userId
 
 
+@pytest.mark.usefixtures("server_session")
 class TestUpdatePassword(object):
     """
     Test the updatePassword op
     """
 
-    def test_update_pwd_endpoint_is_called(self):
-        server = dummy_http.DummyHttpServer()
-        session = widesky.WideskyHaystackSession(
-            uri=BASE_URI,
-            username='testuser',
-            password='testpassword',
-            client_id='testclient',
-            client_secret='testclientsecret',
-            http_client=dummy_http.DummyHttpClient,
-            http_args={'server': server, 'debug': True})
+    def test_update_pwd_endpoint_is_called(self, server_session):
+        (server, session) = server_session
 
-        session._on_authenticate_done(DummyWsOperation())
-        session.updatePassword('hello123X')
+        # Issue the request
+        op = session.update_password('hello123X')
 
-        assert server.requests() is 1
-        assert server._requests[0].body == \
-        '{"newPassword": "hello123X"}'
+        # Pop the request off the stack and inspect it
+        rq = server.next_request()
+        assert server.requests() == 0, 'More requests waiting'
+
+        body = json.loads(rq.body)
+        assert body == {"newPassword": "hello123X"}
+
+        rq.respond(status=200,
+                headers={
+                    b'Content-Type': 'application/json'
+                },
+                content='{}')
+
+        assert op.state == 'done'
+        logging.debug('Result = %s', op.result)
+        assert server.requests() == 0
+
+        op.wait()
+        assert op.result is None
 
 
 class TestIsLoggedIn(object):
