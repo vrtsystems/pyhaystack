@@ -7,7 +7,8 @@ VRT Widesky Client support
 from time import time
 from .session import HaystackSession
 from .ops.vendor.widesky import WideskyAuthenticateOperation, \
-        CreateEntityOperation, WideSkyHasFeaturesOperation
+        CreateEntityOperation, WideSkyHasFeaturesOperation, \
+        WideSkyPasswordChangeOperation
 from .mixins.vendor.widesky import crud, multihis, password
 from ..util.asyncexc import AsynchronousException
 from .http.exceptions import HTTPStatusError
@@ -36,6 +37,7 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
     _AUTH_OPERATION = WideskyAuthenticateOperation
     _CREATE_ENTITY_OPERATION = CreateEntityOperation
     _HAS_FEATURES_OPERATION = WideSkyHasFeaturesOperation
+    _PASSWORD_CHANGE_OPERATION = WideSkyPasswordChangeOperation
 
     def __init__(self, uri, username, password,
             client_id, client_secret,
