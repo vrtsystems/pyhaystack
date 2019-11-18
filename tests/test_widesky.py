@@ -122,6 +122,7 @@ class TestUpdatePassword(object):
         rq = server.next_request()
         assert server.requests() == 0, 'More requests waiting'
 
+        assert rq.headers.get('Authorization') == 'Bearer DummyAccessToken'
         body = json.loads(rq.body)
         assert body == {"newPassword": "hello123X"}
 
