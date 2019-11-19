@@ -118,6 +118,9 @@ class TestUpdatePassword(object):
         # Issue the request
         op = session.update_password('hello123X')
 
+        # Make sure there's no error during set-up.
+        assert (not op.is_done) or (op.result is None)
+
         # Pop the request off the stack and inspect it
         rq = server.next_request()
         assert server.requests() == 0, 'More requests waiting'

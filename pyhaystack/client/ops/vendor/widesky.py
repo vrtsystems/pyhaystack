@@ -13,6 +13,7 @@ import semver
 
 from ....util import state
 from ....util.asyncexc import AsynchronousException
+from ..grid import BaseAuthOperation
 from ..entity import EntityRetrieveOperation
 from ..feature import HasFeaturesOperation
 from ...session import HaystackSession
@@ -228,68 +229,35 @@ class WideSkyHasFeaturesOperation(HasFeaturesOperation):
         return res
 
 
-class WideSkyPasswordChangeOperation(state.HaystackOperation):
+class WideSkyPasswordChangeOperation(BaseAuthOperation):
     """
     The Password Change operation implements the logic required to change a
     user's password.
     """
     def __init__(self, session, new_password, **kwargs):
-        super(WideSkyPasswordChangeOperation, self).__init__(**kwargs)
-        self._session = session
-        self._new_password = new_password
-        self._state_machine = fysom.Fysom(
-                initial='init', final='done',
-                events=[
-                    # Event             Current State       New State
-                    ('send_update',     'init',             'update'),
-                    ('update_done',     'update',           'done'),
-                    ('exception',       '*',                'done'),
-                ], callbacks={
-                    'onsend_update':        self._send_update,
-                    'onenterdone':          self._do_done,
-                })
+        self._log = session._log.getChild('updatePassword')
+        super(WideSkyPasswordChangeOperation, self).__init__(
+                session=session, uri='user/updatePassword',
+                **kwargs)
+        self._content_type = 'application/json'
+        self._body = json.dumps({ "newPassword": new_password })
 
-    def go(self):
+    def _do_submit(self, event):
         """
-        Start the request.
+        Submit the request to change the current logged in user's password.
         """
         try:
-            self._state_machine.send_update()
+            self._session._post(self._uri, body=self._body,
+                    body_type=self._content_type, headers=self._headers,
+                    callback=self._on_response, api=False)
         except: # Catch all exceptions to pass to caller.
             self._state_machine.exception(result=AsynchronousException())
 
-    def _send_update(self, event):
-        """
-        Change the current logged in user's password.
-
-        If the update is unsuccessful then AsynchronousException is raised.
-
-        :param newPassword: Password value.
-        :param callback: The function to call after this operation
-        is complete.
-        """
-        try:
-            self._session._post(uri='user/updatePassword',
-                        callback=self._update_done,
-                        body=json.dumps({ "newPassword": self._new_password }),
-                        headers={
-                            "Content-Type": "application/json"
-                        },
-                        api=False)
-        except: # Catch all exceptions to pass to caller.
-            self._state_machine.exception(result=AsynchronousException())
-
-    def _update_done(self, response):
+    def _on_response(self, response):
         try:
             if isinstance(response, AsynchronousException):
                 response.reraise()
 
-            self._state_machine.update_done(result=None)
+            self._state_machine.response_ok(result=None)
         except: # Catch all exceptions to pass to caller.
             self._state_machine.exception(result=AsynchronousException())
-
-    def _do_done(self, event):
-        """
-        Return the result from the state machine.
-        """
-        self._done(event.result)
