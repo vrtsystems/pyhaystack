@@ -9,11 +9,11 @@ import hszinc
 import fysom
 import json
 import base64
-import shlex
 import semver
 
 from ....util import state
 from ....util.asyncexc import AsynchronousException
+from ..grid import BaseAuthOperation
 from ..entity import EntityRetrieveOperation
 from ..feature import HasFeaturesOperation
 from ...session import HaystackSession
@@ -227,3 +227,37 @@ class WideSkyHasFeaturesOperation(HasFeaturesOperation):
                 except ValueError:
                     return res
         return res
+
+
+class WideSkyPasswordChangeOperation(BaseAuthOperation):
+    """
+    The Password Change operation implements the logic required to change a
+    user's password.
+    """
+    def __init__(self, session, new_password, **kwargs):
+        self._log = session._log.getChild('updatePassword')
+        super(WideSkyPasswordChangeOperation, self).__init__(
+                session=session, uri='user/updatePassword',
+                **kwargs)
+        self._content_type = 'application/json'
+        self._body = json.dumps({ "newPassword": new_password })
+
+    def _do_submit(self, event):
+        """
+        Submit the request to change the current logged in user's password.
+        """
+        try:
+            self._session._post(self._uri, body=self._body,
+                    body_type=self._content_type, headers=self._headers,
+                    callback=self._on_response, api=False)
+        except: # Catch all exceptions to pass to caller.
+            self._state_machine.exception(result=AsynchronousException())
+
+    def _on_response(self, response):
+        try:
+            if isinstance(response, AsynchronousException):
+                response.reraise()
+
+            self._state_machine.response_ok(result=None)
+        except: # Catch all exceptions to pass to caller.
+            self._state_machine.exception(result=AsynchronousException())

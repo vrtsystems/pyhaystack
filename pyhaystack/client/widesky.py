@@ -7,8 +7,9 @@ VRT Widesky Client support
 from time import time
 from .session import HaystackSession
 from .ops.vendor.widesky import WideskyAuthenticateOperation, \
-        CreateEntityOperation, WideSkyHasFeaturesOperation
-from .mixins.vendor.widesky import crud, multihis
+        CreateEntityOperation, WideSkyHasFeaturesOperation, \
+        WideSkyPasswordChangeOperation
+from .mixins.vendor.widesky import crud, multihis, password
 from ..util.asyncexc import AsynchronousException
 from .http.exceptions import HTTPStatusError
 
@@ -25,6 +26,7 @@ def _decode_str(s, enc='utf-8'):
 
 class WideskyHaystackSession(crud.CRUDOpsMixin,
         multihis.MultiHisOpsMixin,
+        password.PasswordOpsMixin,
         HaystackSession):
     """
     The WideskyHaystackSession class implements some base support for
@@ -35,10 +37,12 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
     _AUTH_OPERATION = WideskyAuthenticateOperation
     _CREATE_ENTITY_OPERATION = CreateEntityOperation
     _HAS_FEATURES_OPERATION = WideSkyHasFeaturesOperation
+    _PASSWORD_CHANGE_OPERATION = WideSkyPasswordChangeOperation
 
     def __init__(self, uri, username, password,
             client_id, client_secret,
-            api_dir='api', auth_dir='oauth2/token', **kwargs):
+            api_dir='api', auth_dir='oauth2/token',
+            impersonate=None, **kwargs):
         """
         Initialise a VRT Widesky Project Haystack session handler.
 
@@ -47,6 +51,7 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
         :param password: Authentication password.
         :param client_id: Authentication client ID.
         :param client_secret: Authentication client secret.
+        :param impersonate: A widesky user id.
         """
         super(WideskyHaystackSession, self).__init__(
                 uri, api_dir, **kwargs)
@@ -56,6 +61,7 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
         self._client_id = client_id
         self._client_secret = client_secret
         self._auth_result = None
+        self._impersonate = impersonate
 
     @property
     def is_logged_in(self):
@@ -109,6 +115,10 @@ class WideskyHaystackSession(crud.CRUDOpsMixin,
                             'us-ascii'),
                     )).encode('us-ascii')
             }
+
+            if self._impersonate:
+                self._client.headers['X-IMPERSONATE'] = self._impersonate;
+
         except:
             self._auth_result = None
             self._client.headers = {}
