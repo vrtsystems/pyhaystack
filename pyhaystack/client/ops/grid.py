@@ -278,10 +278,10 @@ class BaseGridOperation(BaseAuthOperation):
 
             if content_type in ('text/zinc', 'text/plain'):
                 # We have been given a grid in ZINC format.
-                decoded = hszinc.parse(body, mode=hszinc.MODE_ZINC)
+                decoded = hszinc.parse(body, mode=hszinc.MODE_ZINC, single=False)
             elif content_type == 'application/json':
                 # We have been given a grid in JSON format.
-                decoded = [hszinc.parse(body, mode=hszinc.MODE_JSON)]
+                decoded = hszinc.parse(body, mode=hszinc.MODE_JSON, single=False)
             elif content_type in ('text/html'):
                 # We probably fell back to a login screen after auto logoff.
                 self._state_machine.exception(AsynchronousException())
