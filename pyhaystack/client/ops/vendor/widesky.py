@@ -249,22 +249,23 @@ class WideSkyPasswordChangeOperation(BaseAuthOperation):
     The Password Change operation implements the logic required to change a
     user's password.
     """
+
     def __init__(self, session, new_password, **kwargs):
         super(WideSkyPasswordChangeOperation, self).__init__(
-                session=session, uri='user/updatePassword', **kwargs
+            session=session, uri="user/updatePassword", **kwargs
         )
         self._new_password = new_password
         self._state_machine = fysom.Fysom(
-                initial='init', final='done',
-                events=[
-                    # Event             Current State       New State
-                    ('send_update',     'init',             'update'),
-                    ('update_done',     'update',           'done'),
-                    ('exception',       '*',                'done'),
-                ], callbacks={
-                    'onsend_update':        self._do_submit,
-                    'onenterdone':          self._do_done,
-                })
+            initial="init",
+            final="done",
+            events=[
+                # Event  Current State  New State
+                ("send_update", "init", "update"),
+                ("update_done", "update", "done"),
+                ("exception", "*", "done"),
+            ],
+            callbacks={"onsend_update": self._do_submit, "onenterdone": self._do_done,},
+        )
 
     def go(self):
         """
@@ -272,7 +273,7 @@ class WideSkyPasswordChangeOperation(BaseAuthOperation):
         """
         try:
             self._state_machine.send_update()
-        except: # Catch all exceptions to pass to caller.
+        except:  # Catch all exceptions to pass to caller.
             self._state_machine.exception(result=AsynchronousException())
 
     def _do_submit(self, event):
@@ -281,15 +282,13 @@ class WideSkyPasswordChangeOperation(BaseAuthOperation):
         """
         try:
             self._session._post(
-                    uri=self._uri,
-                    callback=self._update_done,
-                    body=json.dumps({ "newPassword": self._new_password }),
-                    headers={
-                        "Content-Type": "application/json"
-                    },
-                    api=False
+                uri=self._uri,
+                callback=self._update_done,
+                body=json.dumps({"newPassword": self._new_password}),
+                headers={"Content-Type": "application/json"},
+                api=False,
             )
-        except: # Catch all exceptions to pass to caller.
+        except:  # Catch all exceptions to pass to caller.
             self._state_machine.exception(result=AsynchronousException())
 
     def _update_done(self, response):
@@ -298,7 +297,7 @@ class WideSkyPasswordChangeOperation(BaseAuthOperation):
                 response.reraise()
 
             self._state_machine.update_done(result=None)
-        except: # Catch all exceptions to pass to caller.
+        except:  # Catch all exceptions to pass to caller.
             self._state_machine.exception(result=AsynchronousException())
 
     def _do_done(self, event):

@@ -29,8 +29,10 @@ def _decode_str(s, enc="utf-8"):
 
 
 class WideskyHaystackSession(
-    crud.CRUDOpsMixin, multihis.MultiHisOpsMixin,
-    password.PasswordOpsMixin, HaystackSession
+    crud.CRUDOpsMixin,
+    multihis.MultiHisOpsMixin,
+    password.PasswordOpsMixin,
+    HaystackSession,
 ):
     """
     The WideskyHaystackSession class implements some base support for
@@ -129,7 +131,7 @@ class WideskyHaystackSession(
             }
 
             if self._impersonate:
-                self._client.headers['X-IMPERSONATE'] = self._impersonate
+                self._client.headers["X-IMPERSONATE"] = self._impersonate
         except:
             self._auth_result = None
             self._client.headers = {}

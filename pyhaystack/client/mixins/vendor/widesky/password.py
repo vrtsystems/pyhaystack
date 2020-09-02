@@ -4,6 +4,7 @@
 VRT Widesky low-level Password mix-in.
 """
 
+
 class PasswordOpsMixin(object):
     """
     The Password operations mix-in implements low-level support for
