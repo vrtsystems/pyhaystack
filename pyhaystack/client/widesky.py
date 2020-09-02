@@ -10,8 +10,9 @@ from .ops.vendor.widesky import (
     WideskyAuthenticateOperation,
     CreateEntityOperation,
     WideSkyHasFeaturesOperation,
+    WideSkyPasswordChangeOperation,
 )
-from .mixins.vendor.widesky import crud, multihis
+from .mixins.vendor.widesky import crud, multihis, password
 from ..util.asyncexc import AsynchronousException
 from .http.exceptions import HTTPStatusError
 
@@ -28,7 +29,8 @@ def _decode_str(s, enc="utf-8"):
 
 
 class WideskyHaystackSession(
-    crud.CRUDOpsMixin, multihis.MultiHisOpsMixin, HaystackSession
+    crud.CRUDOpsMixin, multihis.MultiHisOpsMixin,
+    password.PasswordOpsMixin, HaystackSession
 ):
     """
     The WideskyHaystackSession class implements some base support for
@@ -39,6 +41,7 @@ class WideskyHaystackSession(
     _AUTH_OPERATION = WideskyAuthenticateOperation
     _CREATE_ENTITY_OPERATION = CreateEntityOperation
     _HAS_FEATURES_OPERATION = WideSkyHasFeaturesOperation
+    _PASSWORD_CHANGE_OPERATION = WideSkyPasswordChangeOperation
 
     def __init__(
         self,
