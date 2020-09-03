@@ -12,7 +12,6 @@ from pyhaystack.client.http import dummy as dummy_http
 from pyhaystack.client.http.base import HTTPResponse
 from pyhaystack.client.http.exceptions import HTTPStatusError
 from pyhaystack.util.asyncexc import AsynchronousException
-from .util import grid_cmp
 
 from pyhaystack.client import widesky
 
@@ -20,8 +19,6 @@ from pyhaystack.client import widesky
 import hszinc
 
 # For date/time generation
-import datetime
-import pytz
 import time
 
 # JSON encoding/decoding
@@ -31,8 +28,6 @@ import json
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
-
-from pyhaystack.client import widesky
 
 BASE_URI = "https://myserver/api/"
 
@@ -344,7 +339,7 @@ class TestIsLoggedIn(object):
 
 
 class TestOnHTTPGridResponse(object):
-    """`
+    """
     Test _on_http_grid_response
     """
 
