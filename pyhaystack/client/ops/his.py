@@ -79,12 +79,6 @@ class HisReadSeriesOperation(state.HaystackOperation):
                 ]
             )
 
-        if isinstance(rng, slice):
-            rng = ','.join([
-                hszinc.dump_scalar(p, mode=hszinc.MODE_ZINC)
-                for p in (rng.start, rng.stop)
-            ])
-
         self._session = session
         self._point = point
         self._range = rng
@@ -210,12 +204,6 @@ class HisReadFrameOperation(state.HaystackOperation):
                     for p in (rng.start, rng.stop)
                 ]
             )
-
-        if isinstance(rng, slice):
-            rng = ','.join([
-                hszinc.dump_scalar(p, mode=hszinc.MODE_ZINC)
-                for p in (rng.start, rng.stop)
-            ])
 
         # Convert the columns to a list of tuples.
         strip_ref = lambda r: r.name if isinstance(r, hszinc.Ref) else r
