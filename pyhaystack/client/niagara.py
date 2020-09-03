@@ -8,8 +8,12 @@ from .session import HaystackSession
 from .ops.vendor.niagara import NiagaraAXAuthenticateOperation
 from .ops.vendor.niagara_scram import Niagara4ScramAuthenticateOperation
 from .mixins.vendor.niagara.bql import BQLOperation, BQLMixin
+from .mixins.vendor.niagara.encoding import EncodingMixin
 
-class NiagaraHaystackSession(HaystackSession, BQLMixin):
+import hszinc
+
+
+class NiagaraHaystackSession(HaystackSession, BQLMixin, EncodingMixin):
     """
     The NiagaraHaystackSession class implements some base support for
     NiagaraAX. This is mainly a convenience for
@@ -18,7 +22,7 @@ class NiagaraHaystackSession(HaystackSession, BQLMixin):
 
     _AUTH_OPERATION = NiagaraAXAuthenticateOperation
     _BQL_OPERATION = BQLOperation
-    
+
     def __init__(self, uri, username, password, **kwargs):
         """
         Initialise a Nagara Project Haystack session handler.
@@ -27,7 +31,7 @@ class NiagaraHaystackSession(HaystackSession, BQLMixin):
         :param username: Authentication user name.
         :param password: Authentication password.
         """
-        super(NiagaraHaystackSession, self).__init__(uri, 'haystack', **kwargs)
+        super(NiagaraHaystackSession, self).__init__(uri, "haystack", **kwargs)
         self._username = username
         self._password = password
         self._authenticated = False
@@ -61,7 +65,24 @@ class NiagaraHaystackSession(HaystackSession, BQLMixin):
         finally:
             self._auth_op = None
 
-class Niagara4HaystackSession(HaystackSession, BQLMixin):
+    def logout(self):
+        def callback(response):
+            try:
+                status_code = response.status_code
+
+            except AttributeError as error:
+                status_code = -1
+
+            if status_code != 200:
+                self._log.warning("Failed to close nhaystack session")
+                self._log.warning("status_code={}".format(status_code))
+            else:
+                self._log.info("You've been properly disconnected")
+
+        self._get("/logout", callback, api=False)
+
+
+class Niagara4HaystackSession(HaystackSession, BQLMixin, EncodingMixin):
     """
     The Niagara4HaystackSession class implements some base support for
     Niagara4. This is mainly a convenience for
@@ -71,15 +92,18 @@ class Niagara4HaystackSession(HaystackSession, BQLMixin):
     _AUTH_OPERATION = Niagara4ScramAuthenticateOperation
     _BQL_OPERATION = BQLOperation
 
-    def __init__(self, uri, username, password, **kwargs):
+    def __init__(self, uri, username, password, grid_format=hszinc.MODE_JSON, **kwargs):
         """
         Initialise a Nagara 4 Project Haystack session handler.
 
         :param uri: Base URI for the Haystack installation.
         :param username: Authentication user name.
         :param password: Authentication password.
+        :param grid_format: the grid format to use in series (json, zinc)
         """
-        super(Niagara4HaystackSession, self).__init__(uri, 'haystack', **kwargs)
+        super(Niagara4HaystackSession, self).__init__(
+            uri, "haystack", grid_format=grid_format, **kwargs
+        )
         self._username = username
         self._password = password
         self._authenticated = False
@@ -100,7 +124,7 @@ class Niagara4HaystackSession(HaystackSession, BQLMixin):
         """
         try:
             op_result = operation.result
-            self._authenticated = op_result['authenticated']
+            self._authenticated = op_result["authenticated"]
 
         except:
             self._authenticated = False
@@ -108,5 +132,19 @@ class Niagara4HaystackSession(HaystackSession, BQLMixin):
             self._client.cookies = None
         finally:
             self._auth_op = None
-            
 
+    def logout(self):
+        def callback(response):
+            try:
+                status_code = response.status_code
+
+            except AttributeError as error:
+                status_code = -1
+
+            if status_code != 200:
+                self._log.warning("Failed to close nhaystack session, ", end="")
+                self._log.warning("status_code={}".format(status_code))
+            else:
+                self._log.info("You've been properly disconnected")
+
+        self._get("/logout", callback, api=False)
